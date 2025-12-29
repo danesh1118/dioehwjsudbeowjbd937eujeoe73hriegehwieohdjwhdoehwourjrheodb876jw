@@ -440,14 +440,19 @@
         const flagEmojis = ["🇩🇪", "🇮🇩", "🇰🇷", "🇺🇸", "🇨🇦", "🇫🇮", "🇬🇧", "🇧🇷", "🇨🇭", "🇳🇱"];
 
         const TOTAL_GB = 100000;
-        const INITIAL_CONSUMED_MIN_GB = 3695;
-        const INITIAL_CONSUMED_MAX_GB = 3998;
-        const INITIAL_REMAINING_DAYS = 29;
-        const INITIAL_REMAINING_HOURS = 2;
+        const INITIAL_CONSUMED_MIN_GB = 5000;
+        const INITIAL_CONSUMED_MAX_GB = 5099;
+        const INITIAL_REMAINING_DAYS = 28;
+        const INITIAL_REMAINING_HOURS = 20; // 20 ساعت و 45 دقیقه باقی‌مانده
+        const INITIAL_REMAINING_MINUTES = 45; // برای دقیق‌تر بودن دقیقه‌ها
         const PERIOD_DAYS = 30;
         const PERIOD_MS = PERIOD_DAYS * 24 * 60 * 60 * 1000;
         const CONSUMPTION_MIN = 40;
         const CONSUMPTION_MAX = 60;
+
+        // نسخه پنل — هر بار تغییر می‌دی، این عدد رو یکی اضافه کن
+        const PANEL_VERSION = 1;
+        const STORAGE_KEY_VERSION = 'v2ray_panel_version';
 
         let periodStartTime = null;
         let totalConsumedMB = 0;
@@ -456,6 +461,14 @@
         const STORAGE_KEY_START = 'v2ray_period_start';
         const STORAGE_KEY_CONSUMED = 'v2ray_consumed_mb';
         const STORAGE_KEY_LAST = 'v2ray_last_update';
+
+        // چک کردن نسخه برای ریست داده‌ها
+        if (localStorage.getItem(STORAGE_KEY_VERSION) !== PANEL_VERSION.toString()) {
+            localStorage.removeItem(STORAGE_KEY_START);
+            localStorage.removeItem(STORAGE_KEY_CONSUMED);
+            localStorage.removeItem(STORAGE_KEY_LAST);
+            localStorage.setItem(STORAGE_KEY_VERSION, PANEL_VERSION.toString());
+        }
 
         function loadFromStorage() {
             const savedStart = localStorage.getItem(STORAGE_KEY_START);
@@ -469,7 +482,10 @@
                 const initialConsumedGB = Math.round(randomConsumedGB * 1000) / 1000;
                 totalConsumedMB = initialConsumedGB * 1024;
 
-                const passedMs = (PERIOD_DAYS - INITIAL_REMAINING_DAYS - 1) * 24 * 60 * 60 * 1000 + (24 - INITIAL_REMAINING_HOURS) * 60 * 60 * 1000;
+                // زمان شروع برای 28 روز، 20 ساعت و 45 دقیقه باقی‌مانده
+                const passedMs = (PERIOD_DAYS - INITIAL_REMAINING_DAYS - 1) * 24 * 60 * 60 * 1000 
+                    + (24 - INITIAL_REMAINING_HOURS) * 60 * 60 * 1000 
+                    + (60 - INITIAL_REMAINING_MINUTES) * 60 * 1000;
                 periodStartTime = now - passedMs;
 
                 lastUpdateTime = now;
@@ -483,7 +499,9 @@
                     const initialConsumedGB = Math.round(randomConsumedGB * 1000) / 1000;
                     totalConsumedMB = initialConsumedGB * 1024;
 
-                    const passedMs = (PERIOD_DAYS - INITIAL_REMAINING_DAYS - 1) * 24 * 60 * 60 * 1000 + (24 - INITIAL_REMAINING_HOURS) * 60 * 60 * 1000;
+                    const passedMs = (PERIOD_DAYS - INITIAL_REMAINING_DAYS - 1) * 24 * 60 * 60 * 1000 
+                        + (24 - INITIAL_REMAINING_HOURS) * 60 * 60 * 1000 
+                        + (60 - INITIAL_REMAINING_MINUTES) * 60 * 1000;
                     periodStartTime = now - passedMs;
 
                     lastUpdateTime = now;
