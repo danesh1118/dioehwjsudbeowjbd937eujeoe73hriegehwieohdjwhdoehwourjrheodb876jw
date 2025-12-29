@@ -221,189 +221,6 @@
     </style>
 </head>
 <body>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-
-    <script>
-        // کانفیگ‌های اصلی (بدون remark - remark داینامیک اضافه میشه)
-        const baseConfigs = [
-            "vless://2fb8808b-b94c-42ea-9dd2-cd77d2efcc8d@www.perplexity.ai:2096?path=%2FeyJqdW5rIjoidDZLaDRBMWhpIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiJwcm94eXlwIiwicGFuZWxJUHMiOltdfQ%3D%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&encryption=none&host=digikalaa.dpdns.org&fp=chrome&type=ws&sni=DiGIkALaA.dpdns.ORG",
-            "vless://9be5679d-cd82-4ace-9fcf-bed31e21fadf@www.perplexity.ai:443?path=%2F43.218.77.16%3D1443&security=tls&encryption=none&host=tronblue.qzz.io&type=ws&sni=tronblue.qzz.io",
-            "vless://e23d87e4-77cd-430f-8769-9508880368c1@www.perplexity.ai:443?path=%2Freg%2Fabout%2Fproxyip%3Dkr.william.us.ci%3Fed%3D2560&security=tls&encryption=none&host=qmsdingyue.1949-10-01.top&type=ws&sni=qmsdingyue.1949-10-01.top",
-            "vless://f14daeff-923f-4ee9-f6ce-bcf0bf4d1d63@www.perplexity.ai:2096?path=%2F&security=tls&encryption=none&host=meiguo2.shuiwudengli.dpdns.org&type=ws&sni=meiguo2.shuiwudengli.dpdns.org",
-            "vless://c5b129d7-f133-4b34-a9c6-68c9a8f70248@www.perplexity.ai:80?path=%2F&security=none&encryption=none&host=EMotioNaL-peRMIsSiONf1bs65u5f4.EcOTOuRISs.Co.uK&type=ws",
-            "vless://876d731a-4615-4a26-a751-d303e12458b0@www.perplexity.ai:443?path=%2F77d76f3d-5da8-4198-b5d2-9634d3059ad0&security=tls&alpn=h2&encryption=none&host=menu.gejeh683bm.ir&fp=chrome&type=ws&sni=menu.gejeh683bm.ir",
-            "vless://1cf0ad1e-060b-42f9-b57d-eb0fe8ffbbe8@www.perplexity.ai:2096?path=%2F&security=tls&encryption=none&host=yinguo.shuiwudengli.dpdns.org&type=ws&sni=yinguo.shuiwudengli.dpdns.org",
-            // کانفیگ اطلاعاتی (آخرین مورد - فقط نمایش حجم و زمان)
-            "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:0?security=none&encryption=none&type=none"
-        ];
-
-        const serverNames = [
-            "آلمان VIP",
-            "اندونزی VIP",
-            "کره جنوبی VIP",
-            "آمریکا VIP",
-            "کانادا VIP",
-            "فینلند VIP",
-            "بریتانیا VIP",
-            "اطلاعات اشتراک"
-        ];
-
-        // محاسبه داینامیک حجم و زمان
-        const MAX_VOLUME_MB = 100000 * 1024;
-        const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-        const CONSUMPTION_RATE_MIN = 40; // MB/s
-        const CONSUMPTION_RATE_MAX = 60; // MB/s
-
-        let periodStartTime = null;
-        let totalVolumeConsumed = 0;
-        let lastUpdateTime = null;
-
-        // تابع کپی با remark داینامیک
-        function copyConfig(index) {
-            let config = baseConfigs[index];
-
-            if (index === baseConfigs.length - 1) {
-                // کانفیگ اطلاعاتی
-                config = config + `#حجم مصرفی: ${consumedGB} GB | باقی‌مانده: ${remainingGB} GB | زمان باقی‌مانده: ${days} روز`;
-            } else {
-                // کانفیگ معمولی
-                const serverName = serverNames[index];
-                const remark = `حجم: ${remainingGB} GB | زمان: ${days} روز | ${serverName}`;
-                config = config + '#' + encodeURIComponent(remark);
-            }
-
-            navigator.clipboard.writeText(config).then(() => {
-                alert(`کانفیگ ${serverNames[index]} کپی شد!`);
-            }).catch(() => {
-                alert('کپی نشد، لطفاً دستی انتخاب و کپی کنید.');
-            });
-        }
-
-        // تشخیص کلاینت (بدون تغییر)
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isV2RayClient = userAgent.includes('v2ray') || 
-                              userAgent.includes('nekobox') || 
-                              userAgent.includes('streisand') || 
-                              userAgent.includes('v2rayn') || 
-                              userAgent.includes('hiddify') ||
-                              userAgent.includes('cloak') ||
-                              userAgent.includes('fair') ||
-                              userAgent.includes('v2rayng') ||
-                              userAgent.includes('nekoray') ||
-                              userAgent.includes('hiddifyng') ||
-                              userAgent.includes('hiddify-next') ||
-                              userAgent.includes('sing-box') ||
-                              userAgent.includes('xray');
-
-        if (isV2RayClient) {
-            const allConfigs = baseConfigs.slice(0, -1); // بدون کانفیگ اطلاعاتی برای subscription
-            document.open();
-            document.write(allConfigs.join('\n'));
-            document.close();
-        }
-
-        // Firebase (بدون تغییر)
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_DATABASE_NAME.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        async function loadData() {
-            const startRef = database.ref('v2ray/period_start');
-            const volumeRef = database.ref('v2ray/period_volume');
-            const lastUpdateRef = database.ref('v2ray/last_update');
-
-            const savedStart = await startRef.once('value').then(snapshot => snapshot.val());
-            const savedVolume = await volumeRef.once('value').then(snapshot => snapshot.val());
-            const savedLastUpdate = await lastUpdateRef.once('value').then(snapshot => snapshot.val());
-
-            if (savedStart) {
-                periodStartTime = parseInt(savedStart);
-            } else {
-                periodStartTime = Date.now();
-                await startRef.set(periodStartTime);
-            }
-
-            totalVolumeConsumed = parseFloat(savedVolume) || 0;
-            lastUpdateTime = parseInt(savedLastUpdate) || periodStartTime;
-
-            // محاسبه مصرف آفلاین
-            const now = Date.now();
-            const elapsedMs = now - lastUpdateTime;
-            const elapsedSec = elapsedMs / 1000;
-            const offlineRate = CONSUMPTION_RATE_MIN + Math.random() * (CONSUMPTION_RATE_MAX - CONSUMPTION_RATE_MIN);
-            let addedConsumption = elapsedSec * offlineRate;
-            totalVolumeConsumed += addedConsumption;
-            if (totalVolumeConsumed > MAX_VOLUME_MB) totalVolumeConsumed = MAX_VOLUME_MB;
-
-            lastUpdateTime = now;
-            await saveData();
-        }
-
-        async function saveData() {
-            const startRef = database.ref('v2ray/period_start');
-            const volumeRef = database.ref('v2ray/period_volume');
-            const lastUpdateRef = database.ref('v2ray/last_update');
-
-            await startRef.set(periodStartTime);
-            await volumeRef.set(totalVolumeConsumed);
-            await lastUpdateRef.set(lastUpdateTime);
-        }
-
-        function updateDisplay() {
-            const now = Date.now();
-            const elapsedMs = now - periodStartTime;
-            const timeRemainingMs = PERIOD_MS - elapsedMs;
-            const days = Math.max(0, Math.floor(timeRemainingMs / (1000 * 60 * 60 * 24)));
-            const hours = Math.floor((timeRemainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeRemainingMs % (1000 * 60)) / 1000);
-
-            const remainingGB = ((MAX_VOLUME_MB - totalVolumeConsumed) / 1024).toFixed(3);
-            const consumedGB = (totalVolumeConsumed / 1024).toFixed(3);
-
-            document.getElementById('volume-remaining').textContent = `${remainingGB} GB`;
-            document.getElementById('volume-consumed-text').textContent = `مصرف شده: ${consumedGB} GB`;
-            document.getElementById('time-remaining').textContent = `${days} روز`;
-            document.getElementById('time-detail').textContent = `${days} روز، ${hours} ساعت، ${minutes} دقیقه، ${seconds} ثانیه`;
-
-            const progressPercent = (totalVolumeConsumed / MAX_VOLUME_MB) * 100;
-            document.getElementById('volume-progress').style.width = `${progressPercent}%`;
-        }
-
-        function openSupport() { window.open('https://t.me/Leviko_pubg', '_blank'); }
-        function showFAQ() { /* همان alert قبلی */ alert("سوالات متداول:\n\n..."); }
-        function showTutorial() { /* همان alert قبلی */ alert("آموزش استفاده از پنل:\n\n..."); }
-        function addToApp() { alert('از دکمه‌های «کپی کانفیگ» کنار هر سرور استفاده کنید!'); }
-
-        // شروع
-        (async () => {
-            await loadData();
-            updateDisplay();
-
-            // آپدیت هر ثانیه برای مصرف آنلاین و نمایش
-            setInterval(async () => {
-                if (totalVolumeConsumed < MAX_VOLUME_MB) {
-                    const rate = CONSUMPTION_RATE_MIN + Math.random() * (CONSUMPTION_RATE_MAX - CONSUMPTION_RATE_MIN);
-                    totalVolumeConsumed += rate;
-                    if (totalVolumeConsumed > MAX_VOLUME_MB) totalVolumeConsumed = MAX_VOLUME_MB;
-                    lastUpdateTime = Date.now();
-                    await saveData();
-                }
-                updateDisplay();
-            }, 1000);
-        })();
-    </script>
-
     <div class="container">
         <header>
             <h1>پنل V2Ray - نسخه کامپکت</h1>
@@ -527,7 +344,6 @@
                                 <td><span class="status-active">فعال</span></td>
                                 <td><button class="copy-btn" onclick="copyConfig(6)">کپی کانفیگ</button></td>
                             </tr>
-                            <!-- ردیف جدید: اطلاعات اشتراک -->
                             <tr>
                                 <td>اطلاعات اشتراک</td>
                                 <td><img src="https://flagcdn.com/info.svg" class="flag" alt="Info"> اطلاعات</td>
@@ -546,5 +362,159 @@
             <p>&copy; ۱۴۰۴ - پنل V2Ray کامپکت | پشتیبانی: support@panel.com</p>
         </footer>
     </div>
+
+    <script>
+        // کانفیگ‌های اصلی
+        const baseConfigs = [
+            "vless://2fb8808b-b94c-42ea-9dd2-cd77d2efcc8d@www.perplexity.ai:2096?path=%2FeyJqdW5rIjoidTZLaDRBMWhpIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiJwcm94eXlwIiwicGFuZWxJUHMiOltdfQ%3D%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&encryption=none&host=digikalaa.dpdns.org&fp=chrome&type=ws&sni=DiGIkALaA.dpdns.ORG",
+            "vless://9be5679d-cd82-4ace-9fcf-bed31e21fadf@www.perplexity.ai:443?path=%2F43.218.77.16%3D1443&security=tls&encryption=none&host=tronblue.qzz.io&type=ws&sni=tronblue.qzz.io",
+            "vless://e23d87e4-77cd-430f-8769-9508880368c1@www.perplexity.ai:443?path=%2Freg%2Fabout%2Fproxyip%3Dkr.william.us.ci%3Fed%3D2560&security=tls&encryption=none&host=qmsdingyue.1949-10-01.top&type=ws&sni=qmsdingyue.1949-10-01.top",
+            "vless://f14daeff-923f-4ee9-f6ce-bcf0bf4d1d63@www.perplexity.ai:2096?path=%2F&security=tls&encryption=none&host=meiguo2.shuiwudengli.dpdns.org&type=ws&sni=meiguo2.shuiwudengli.dpdns.org",
+            "vless://c5b129d7-f133-4b34-a9c6-68c9a8f70248@www.perplexity.ai:80?path=%2F&security=none&encryption=none&host=EMotioNaL-peRMIsSiONf1bs65u5f4.EcOTOuRISs.Co.uK&type=ws",
+            "vless://876d731a-4615-4a26-a751-d303e12458b0@www.perplexity.ai:443?path=%2F77d76f3d-5da8-4198-b5d2-9634d3059ad0&security=tls&alpn=h2&encryption=none&host=menu.gejeh683bm.ir&fp=chrome&type=ws&sni=menu.gejeh683bm.ir",
+            "vless://1cf0ad1e-060b-42f9-b57d-eb0fe8ffbbe8@www.perplexity.ai:2096?path=%2F&security=tls&encryption=none&host=yinguo.shuiwudengli.dpdns.org&type=ws&sni=yinguo.shuiwudengli.dpdns.org",
+            "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:0?security=none&encryption=none&type=none"
+        ];
+
+        // ایموجی پرچم کشورها
+        const flagEmojis = [
+            "🇩🇪", // آلمان
+            "🇮🇩", // اندونزی
+            "🇰🇷", // کره جنوبی
+            "🇺🇸", // آمریکا
+            "🇨🇦", // کانادا
+            "🇫🇮", // فینلند
+            "🇬🇧"  // بریتانیا
+        ];
+
+        const serverNames = [
+            "آلمان VIP", "اندونزی VIP", "کره جنوبی VIP", "آمریکا VIP",
+            "کانادا VIP", "فینلند VIP", "بریتانیا VIP", "اطلاعات اشتراک"
+        ];
+
+        // تنظیمات حجم و زمان
+        const TOTAL_GB = 100000;
+        const MAX_VOLUME_MB = TOTAL_GB * 1024; // 102,400,000 MB
+        const PERIOD_DAYS = 30;
+        const PERIOD_MS = PERIOD_DAYS * 24 * 60 * 60 * 1000;
+        const CONSUMPTION_MIN = 40;
+        const CONSUMPTION_MAX = 60;
+
+        let periodStartTime = null;
+        let totalConsumedMB = 0;
+        let lastUpdateTime = null;
+
+        const STORAGE_KEY_START = 'v2ray_period_start';
+        const STORAGE_KEY_CONSUMED = 'v2ray_consumed_mb';
+        const STORAGE_KEY_LAST = 'v2ray_last_update';
+
+        function loadFromStorage() {
+            const savedStart = localStorage.getItem(STORAGE_KEY_START);
+            const savedConsumed = localStorage.getItem(STORAGE_KEY_CONSUMED);
+            const savedLast = localStorage.getItem(STORAGE_KEY_LAST);
+
+            periodStartTime = savedStart ? parseInt(savedStart) : Date.now();
+            totalConsumedMB = savedConsumed ? parseFloat(savedConsumed) : 0;
+            lastUpdateTime = savedLast ? parseInt(savedLast) : periodStartTime;
+
+            const now = Date.now();
+            if (now - periodStartTime >= PERIOD_MS) {
+                periodStartTime = now;
+                totalConsumedMB = 0;
+            }
+
+            const elapsedSec = (now - lastUpdateTime) / 1000;
+            if (elapsedSec > 0) {
+                const rate = CONSUMPTION_MIN + Math.random() * (CONSUMPTION_MAX - CONSUMPTION_MIN);
+                totalConsumedMB += elapsedSec * rate;
+            }
+
+            saveToStorage();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY_START, periodStartTime);
+            localStorage.setItem(STORAGE_KEY_CONSUMED, totalConsumedMB);
+            localStorage.setItem(STORAGE_KEY_LAST, Date.now());
+        }
+
+        function updateDisplay() {
+            const now = Date.now();
+            let timeRemainingMs = PERIOD_MS - (now - periodStartTime);
+
+            if (timeRemainingMs <= 0) {
+                periodStartTime = now;
+                totalConsumedMB = 0;
+                timeRemainingMs = PERIOD_MS;
+                saveToStorage();
+            }
+
+            const days = Math.floor(timeRemainingMs / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeRemainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeRemainingMs % (1000 * 60)) / 1000);
+
+            const remainingMB = MAX_VOLUME_MB - totalConsumedMB;
+            const remainingGB = (remainingMB / 1024).toFixed(3);
+            const consumedGB = (totalConsumedMB / 1024).toFixed(3);
+
+            document.getElementById('volume-remaining').textContent = `${remainingGB} GB`;
+            document.getElementById('volume-consumed-text').textContent = `مصرف شده: ${consumedGB} GB`;
+            document.getElementById('time-remaining').textContent = `${days} روز`;
+            document.getElementById('time-detail').textContent = `${days} روز، ${hours} ساعت، ${minutes} دقیقه، ${seconds} ثانیه`;
+
+            const progressPercent = (totalConsumedMB / MAX_VOLUME_MB) * 100;
+            document.getElementById('volume-progress').style.width = `${Math.min(progressPercent, 100)}%`;
+        }
+
+        function consumeOnline() {
+            const rate = CONSUMPTION_MIN + Math.random() * (CONSUMPTION_MAX - CONSUMPTION_MIN);
+            totalConsumedMB += rate;
+            if (totalConsumedMB > MAX_VOLUME_MB) totalConsumedMB = MAX_VOLUME_MB;
+            saveToStorage();
+            updateDisplay();
+        }
+
+        function copyConfig(index) {
+            let config = baseConfigs[index];
+            const remainingGB = ((MAX_VOLUME_MB - totalConsumedMB) / 1024).toFixed(3);
+            const consumedGB = (totalConsumedMB / 1024).toFixed(3);
+            const days = Math.floor((PERIOD_MS - (Date.now() - periodStartTime)) / (1000 * 60 * 60 * 24));
+
+            if (index === 7) {
+                const remark = `حجم مصرفی: ${consumedGB} GB | باقی‌مانده: ${remainingGB} GB | زمان باقی‌مانده: ${days} روز`;
+                config += '#' + encodeURIComponent(remark);
+            } else {
+                const remark = `${flagEmojis[index]} VIP SERVER`;
+                config += '#' + encodeURIComponent(remark);
+            }
+
+            navigator.clipboard.writeText(config).then(() => {
+                alert(`کانفیگ ${serverNames[index]} کپی شد!`);
+            }).catch(() => {
+                alert('کپی نشد، لطفاً دستی انتخاب و کپی کنید.');
+            });
+        }
+
+        // تشخیص کلاینت و نمایش فقط کانفیگ‌ها برای سابسکریپشن
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isV2RayClient = /v2ray|nekobox|streisand|v2rayn|hiddify|cloak|fair|v2rayng|nekoray|hiddifyng|hiddify-next|sing-box|xray/i.test(userAgent);
+
+        if (isV2RayClient) {
+            document.open();
+            document.write(baseConfigs.slice(0, -1).join('\n'));
+            document.close();
+        }
+
+        function openSupport() { window.open('https://t.me/Leviko_pubg', '_blank'); }
+        function showFAQ() { alert("سوالات متداول:\n\n..."); }
+        function showTutorial() { alert("آموزش استفاده از پنل:\n\n..."); }
+        function addToApp() { alert('از دکمه‌های «کپی کانفیگ» کنار هر سرور استفاده کنید!'); }
+
+        // شروع
+        loadFromStorage();
+        updateDisplay();
+        setInterval(consumeOnline, 1000);
+    </script>
 </body>
     </html>
