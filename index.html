@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پنل V2Ray - نسخه کامپکت</title>
+    <title>پنل V2Ray - نسخه خریداری شده ت</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -230,6 +230,31 @@
             margin-left: 8px;
         }
 
+        /* دکمه جدید کپی ساب لینک */
+        .copy-sub-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px auto;
+            display: block;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        .copy-sub-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .copy-sub-btn i {
+            margin-left: 8px;
+        }
+
         footer {
             background: #1a1a2e;
             color: #aaa;
@@ -261,13 +286,7 @@
         ];
 
         const countryEmojis = [
-            "🇩🇪", // آلمان
-            "🇮🇩", // اندونزی
-            "🇰🇷", // کره جنوبی
-            "🇺🇸", // آمریکا
-            "🇨🇦", // کانادا
-            "🇫🇮", // فینلند
-            "🇬🇧"  // بریتانیا
+            "🇩🇪", "🇮🇩", "🇰🇷", "🇺🇸", "🇨🇦", "🇫🇮", "🇬🇧"
         ];
 
         const START_TIME = Date.parse('2025-12-28T22:15:00Z');
@@ -321,10 +340,8 @@
             let config = baseConfigs[index];
 
             if (index === 7) {
-                // فقط کانفیگ اطلاعات اشتراک: حجم و زمان
                 config += `#حجم مصرفی: ${consumedGB} GB | باقی‌مانده: ${remainingGB} GB | زمان باقی‌مانده: ${days} روز`;
             } else {
-                // همه سرورهای VIP: فقط VIP SERVER + ایموجی کشور
                 const remark = `VIP SERVER ${countryEmojis[index]}`;
                 config += '#' + encodeURIComponent(remark);
             }
@@ -353,6 +370,16 @@
                 alert('همه کانفیگ‌های پنل با موفقیت کپی شدند!');
             }).catch(() => {
                 prompt('کپی همه نشد، لطفاً دستی کپی کنید:', allConfigs.trim());
+            });
+        }
+
+        // دکمه جدید: کپی ساب لینک
+        function copySubLink() {
+            const subLink = "https://raw.githubusercontent.com/danesh1118/dioehwjsu82bbedwuuw9dbeowjbd937euhdhsiw8w6sshshjwu8ww8eyshshhs827eudhdh/refs/heads/main/sub.txt";
+            navigator.clipboard.writeText(subLink).then(() => {
+                alert('لینک سابسکریپشن با موفقیت کپی شد!');
+            }).catch(() => {
+                prompt('کپی نشد، لطفاً دستی کپی کنید:', subLink);
             });
         }
 
@@ -444,6 +471,11 @@
                         <i class="fas fa-copy"></i> کپی کانفیگ‌ها به صورت دستی
                     </button>
 
+                    <!-- دکمه جدید کپی ساب لینک -->
+                    <button class="copy-sub-btn" onclick="copySubLink()">
+                        <i class="fas fa-link"></i> کپی لینک سابسکریپشن
+                    </button>
+
                     <table>
                         <thead>
                             <tr>
@@ -470,4 +502,4 @@
         </footer>
     </div>
 </body>
-</html>
+                                                  </html>
